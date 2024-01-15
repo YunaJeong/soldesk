@@ -1,0 +1,17 @@
+PrivateEC202: 
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-09e70258ddbdf3c90
+      InstanceType: t2.micro
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: Name
+          Value: Private-EC2-2
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref CloudNetaPrivateSN2
+          GroupSet:
+            - !Ref SecurityGroup2
+          PrivateIpAddress: 10.40.2.201
+          # AssociatePublicIpAddress: false
+     

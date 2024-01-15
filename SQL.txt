@@ -1,0 +1,56 @@
+CREATE EXTERNAL TABLE IF NOT EXISTS alb_logs_partition_projection (
+   type string,
+   TIME string,
+   elb string,
+   client_ip string,
+   client_port INT,
+   target_ip string,
+   target_port INT,
+   request_processing_time DOUBLE,
+   target_processing_time DOUBLE,
+   response_processing_time DOUBLE,
+   elb_status_code string,
+   target_status_code string,
+   received_bytes BIGINT,
+   sent_bytes BIGINT,
+   request_verb string,
+   request_url string,
+   request_proto string,
+   user_agent string,
+   ssl_cipher string,
+   ssl_protocol string,
+   target_group_arn string,
+   trace_id string,
+   domain_name string,
+   chosen_cert_arn string,
+   matched_rule_priority string,
+   request_creation_time string,
+   actions_executed string,
+   redirect_url string,
+   lambda_error_reason string,
+   target_port_list string,
+   target_status_code_list string,
+   classification string,
+   classification_reason string
+) 
+PARTITIONED BY(YEAR INT, MONTH INT, DAY INT) -- 파티션 컬럼
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.RegexSerDe'
+WITH SERDEPROPERTIES (
+   'serialization.format' = '1',
+   'input.regex' = '([^ ]*) ([^ ]*) ([^ ]*) ([^ ]*):([0-9]*) ([^ ]*)[:-]([0-9]*) ([-.0-9]*) ([-.0-9]*) ([-.0-9]*) (|[-0-9]*) (-|[-0-9]*) ([-0-9]*) ([-0-9]*) \"([^ ]*) ([^ ]*) (- |[^ ]*)\" \"([^\"]*)\" ([A-Z0-9-]+) ([A-Za-z0-9.-]*) ([^ ]*) \"([^\"]*)\" \"([^\"]*)\" \"([^\"]*)\" ([-.0-9]*) ([^ ]*) \"([^\"]*)\" \"([^\"]*)\" \"([^ ]*)\" \"([^\s]+?)\" \"([^\s]+)\" \"([^ ]*)\" \"([^ ]*)\"'
+) 
+LOCATION 's3://athena-log-test-11/elb_log/AWSLogs/600163963454/elasticloadbalancing/ap-northeast-2/' -- 로그 파일이 있는 경로
+TBLPROPERTIES (
+   'projection.enabled' = 'true', -- projection 사용하기
+   'projection.day.digits' = '2', -- 일짜를 01, 02, 03 형식으로 사용
+   'projection.day.range' = '01,31', -- 01일에서 31일 까지
+   'projection.day.type' = 'integer', -- int 타입
+   'projection.month.digits' = '2', -- 월별을 01, 02, 03 형식으로 사용
+   'projection.month.range' = '01,12', -- 01월에서 12월 까지
+   'projection.month.type' = 'integer', -- int 타입
+   'projection.year.digits' = '4', -- 년도를 4글자로 사용
+   'projection.year.range' = '2021,2023', -- 2021 ~ 2023 까지 스캔 
+   'projection.year.type' = 'integer', -- int 타입
+   "storage.location.template" = "s3://athena-log-test-11/elb_log/AWSLogs/600163963454/elasticloadbalancing/ap-northeast-2/${year}/${month}/${day}" -- 경로 형식
+)
+
